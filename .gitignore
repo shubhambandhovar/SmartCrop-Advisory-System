@@ -1,0 +1,23 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.DS_Store
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Model Artifacts (Optional: keep if small, ignore if large. For this project, we keep them as they are small <100MB usually)
+# model/*.pkl 
+
+# Dataset
+dataset/
