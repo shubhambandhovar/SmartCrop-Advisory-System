@@ -9,3 +9,4 @@ joblib
 requests
 python-dotenv
 imbalanced-learn
+gunicorn
