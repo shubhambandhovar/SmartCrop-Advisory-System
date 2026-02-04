@@ -78,7 +78,7 @@ function App() {
       )}
 
       <footer style={{ marginTop: '4rem', color: '#999' }}>
-        &copy; 2024 Smart Crop Advisory System | Capstone Project
+        &copy; 2026 Smart Crop Advisory System | Capstone Project
       </footer>
     </div>
   );
