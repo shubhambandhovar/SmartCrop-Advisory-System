@@ -76,6 +76,15 @@ input:focus {
   border-color: var(--primary-green);
 }
 
+.language-select {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #ccd7cf;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  color: #2c3e50;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;

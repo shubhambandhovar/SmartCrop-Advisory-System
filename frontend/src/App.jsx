@@ -13,6 +13,7 @@ function App() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [language, setLanguage] = useState('en');
 
   const handlePredict = async () => {
     if (!selectedLocation) return;
@@ -24,7 +25,8 @@ function App() {
     try {
       const res = await api.post('/predict', {
         latitude: selectedLocation.latitude,
-        longitude: selectedLocation.longitude
+        longitude: selectedLocation.longitude,
+        lang: language
       });
       setResult(res.data);
     } catch (err) {
@@ -50,6 +52,24 @@ function App() {
           </div>
         )}
 
+        <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
+          <label htmlFor="language-select" style={{ marginRight: '0.5rem', fontWeight: 600 }}>
+            Language:
+          </label>
+          <select
+            id="language-select"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="language-select"
+          >
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="mr">Marathi</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+          </select>
+        </div>
+
         <br />
         <button
           onClick={handlePredict}
@@ -73,7 +93,12 @@ function App() {
           <WeatherCard inputs={result.inputs} />
           <SoilCard inputs={result.inputs} />
           <PredictionResult result={result} />
-          <AdvisoryPanel advisory={result.advisory} />
+          <AdvisoryPanel advisory={result.advisory} lang={result.language?.applied || language} />
+          {result.language && (
+            <div className="card" style={{ fontSize: '0.9rem', color: '#556' }}>
+              Language applied: <strong>{result.language.applied}</strong>
+            </div>
+          )}
         </>
       )}
 
