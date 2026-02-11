@@ -1,6 +1,103 @@
+# Soil health analysis logic
+def analyze_soil(soil):
+    # Simple scoring: 0-100, higher is better
+    # Ideal ranges (example, adjust as needed)
+    ideal = {
+        'N': (50, 100),
+        'P': (30, 80),
+        'K': (30, 80),
+        'ph': (6.0, 7.5)
+    }
+    score = 0
+    total = 0
+    recs = []
+    for key, (low, high) in ideal.items():
+        val = soil.get(key)
+        if val is not None:
+            total += 1
+            if low <= val <= high:
+                score += 1
+            else:
+                if val < low:
+                    recs.append(f"Increase {key} (current: {val})")
+                else:
+                    recs.append(f"Reduce {key} (current: {val})")
+    percent = int((score / total) * 100) if total else 0
+    quality = "Good" if percent >= 75 else ("Moderate" if percent >= 50 else "Poor")
+    return {
+        "soil_score": percent,
+        "soil_quality": quality,
+        "soil_recommendations": recs
+    }
+# Crop calendar and advisory logic
+import calendar
+
+# Example crop calendar (expand as needed)
+CROP_CALENDAR = {
+    "rice": {"planting": ["June", "July"], "harvest": ["October", "November"]},
+    "wheat": {"planting": ["November", "December"], "harvest": ["March", "April"]},
+    "maize": {"planting": ["June", "July"], "harvest": ["September", "October"]},
+    "chickpea": {"planting": ["October", "November"], "harvest": ["February", "March"]},
+    # ... add more crops as needed
+}
+
+# Example pest/disease alert logic (simple demo)
+def get_pest_disease_alert(crop, month):
+    alerts = {
+        "rice": {"July": "Watch for rice stem borer.", "October": "Monitor for blast disease."},
+        "wheat": {"December": "Rust risk increases in cool, wet weather."},
+        "maize": {"July": "Check for fall armyworm."},
+        # ... add more as needed
+    }
+    return alerts.get(crop, {}).get(month, "No major alerts.")
+@prediction_bp.route('/mapdata', methods=['GET'])
+def get_map_data():
+    """
+    Returns cluster/crop distribution for geospatial visualization.
+    For demo, returns cluster_map and mock centroids (since real lat/lon not in dataset).
+    """
+    try:
+        cluster_map = get_cluster_map()
+        kmeans = get_kmeans_model()
+        # Mock centroids: treat feature space as pseudo-coordinates
+        centroids = kmeans.cluster_centers_.tolist() if kmeans else []
+        # Each centroid is [N, P, K, temperature, humidity, ph, rainfall]
+        # For visualization, you may map temperature/humidity/rainfall to color/size
+        return jsonify({
+            "cluster_map": cluster_map,
+            "centroids": centroids,
+            "feature_names": ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+        })
+    except Exception as e:
+        print(f"Map data error: {e}")
+        return jsonify({"error": str(e)}), 500
+import json
+import datetime
+# Add user feedback endpoint
+@prediction_bp.route('/feedback', methods=['POST'])
+def submit_feedback():
+    try:
+        data = request.json
+        feedback = {
+            "timestamp": datetime.datetime.utcnow().isoformat(),
+            "latitude": data.get("latitude"),
+            "longitude": data.get("longitude"),
+            "crop": data.get("crop"),
+            "feedback": data.get("feedback"),  # e.g., 'accepted', 'rejected', 'notes', etc.
+            "user_notes": data.get("user_notes", "")
+        }
+        # Save feedback to a local file (append mode)
+        feedback_file = 'user_feedback.jsonl'
+        with open(feedback_file, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(feedback) + '\n')
+        return jsonify({"status": "success", "message": "Feedback recorded."})
+    except Exception as e:
+        print(f"Feedback error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 from flask import Blueprint, request, jsonify
 from services.model_service import get_rf_model, get_kmeans_model, get_scaler, get_cluster_map
+import shap
 from services.weather_service import get_weather, get_soil_data
 import numpy as np
 
@@ -257,12 +354,59 @@ def predict():
                 "confidence": f"{round(score * 100, 1)}%"
             })
             
+
         # 5. Advisory
         top_crop = recommendations[0]['crop']
         advisory = get_advisory({"crop": top_crop}, input_dict)
         advisory_localized = localize_advisory(advisory, lang)
-        
-        # 6. Response
+
+        # 5b. SHAP Explainability for top crop
+        shap_explanation = None
+        try:
+            explainer = shap.TreeExplainer(rf)
+            shap_values = explainer.shap_values(features_scaled)
+            # Find the index for the top crop
+            if hasattr(rf, 'classes_'):
+                class_idx = list(rf.classes_).index(top_crop)
+                feature_names = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+                shap_impact = dict(zip(feature_names, shap_values[class_idx][0]))
+                # Sort by absolute impact
+                shap_explanation = {
+                    'feature_impact': sorted(shap_impact.items(), key=lambda x: abs(x[1]), reverse=True)
+                }
+        except Exception as e:
+            print(f"SHAP explainability error: {e}")
+            shap_explanation = None
+
+        # 6. Crop calendar & alerts
+        now = datetime.datetime.utcnow()
+        month_name = calendar.month_name[now.month]
+        crop_calendar = CROP_CALENDAR.get(top_crop.lower(), {})
+        pest_disease_alert = get_pest_disease_alert(top_crop.lower(), month_name)
+
+        # Localize crop calendar and pest/disease alerts
+        def localize_months(months, lang):
+            # For demo, only Hindi/Marathi/Spanish/French for a few months
+            month_map = {
+                "hi": {"June": "जून", "July": "जुलाई", "October": "अक्टूबर", "November": "नवंबर", "December": "दिसंबर", "March": "मार्च", "April": "अप्रैल", "February": "फरवरी"},
+                "mr": {"June": "जून", "July": "जुलै", "October": "ऑक्टोबर", "November": "नोव्हेंबर", "December": "डिसेंबर", "March": "मार्च", "April": "एप्रिल", "February": "फेब्रुवारी"},
+                "es": {"June": "Junio", "July": "Julio", "October": "Octubre", "November": "Noviembre", "December": "Diciembre", "March": "Marzo", "April": "Abril", "February": "Febrero"},
+                "fr": {"June": "Juin", "July": "Juillet", "October": "Octobre", "November": "Novembre", "December": "Décembre", "March": "Mars", "April": "Avril", "February": "Février"}
+            }
+            if lang == "en" or not months:
+                return months
+            return [month_map.get(lang, {}).get(m, m) for m in months]
+
+        crop_calendar_localized = {
+            "planting": localize_months(crop_calendar.get("planting", []), lang),
+            "harvest": localize_months(crop_calendar.get("harvest", []), lang)
+        } if crop_calendar else {}
+
+        pest_disease_alert_localized = translate_text(pest_disease_alert, lang)
+
+        # Soil health analysis
+        soil_analysis = analyze_soil(soil)
+
         response = {
             "project": "Smart Crop Advisory System",
             "location": f"Lat: {lat}, Lon: {lon}",
@@ -274,9 +418,13 @@ def predict():
             "inputs": input_dict,
             "recommendations": recommendations,
             "advisory": advisory_localized,
-            "model_type": "Hybrid Random Forest + KMeans Membership"
+            "model_type": "Hybrid Random Forest + KMeans Membership",
+            "explainability": shap_explanation,
+            "crop_calendar": crop_calendar_localized,
+            "current_month": translate_text(month_name, lang),
+            "pest_disease_alert": pest_disease_alert_localized,
+            "soil_analysis": soil_analysis
         }
-        
         return jsonify(response)
 
     except Exception as e:
