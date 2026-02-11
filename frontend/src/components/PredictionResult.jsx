@@ -1,8 +1,18 @@
 
 import React from 'react';
 
+
 const PredictionResult = ({ result }) => {
     if (!result) return null;
+
+    // SHAP explainability
+    const shap = result.explainability;
+    // Crop calendar
+    const cropCalendar = result.crop_calendar;
+    // Pest/disease alert
+    const pestAlert = result.pest_disease_alert;
+    // Soil health analytics
+    const soilAnalysis = result.soil_analysis;
 
     return (
         <div className="card">
@@ -30,6 +40,51 @@ const PredictionResult = ({ result }) => {
             <div style={{ marginTop: '1rem', fontStyle: 'italic', fontSize: '0.9rem', color: '#888' }}>
                 Model: {result.model_type}
             </div>
+
+            {/* SHAP Explainability */}
+            {shap && (
+                <div className="card" style={{ marginTop: '1.5rem', background: '#f8f8f8' }}>
+                    <h3>Why these crops? (Explainability)</h3>
+                    <ul>
+                        {shap.map((item, idx) => (
+                            <li key={idx}>{item}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
+            {/* Crop Calendar & Pest/Disease Alert */}
+            {(cropCalendar || pestAlert) && (
+                <div className="card" style={{ marginTop: '1.5rem', background: '#f8f8f8' }}>
+                    <h3>Crop Calendar & Alerts</h3>
+                    {cropCalendar && (
+                        <div><strong>Planting:</strong> {cropCalendar.planting?.join(', ')}<br/>
+                        <strong>Harvest:</strong> {cropCalendar.harvest?.join(', ')}</div>
+                    )}
+                    {pestAlert && (
+                        <div style={{ marginTop: '0.5rem' }}><strong>Pest/Disease Alert:</strong> {pestAlert}</div>
+                    )}
+                </div>
+            )}
+
+            {/* Soil Health Analytics */}
+            {soilAnalysis && (
+                <div className="card" style={{ marginTop: '1.5rem', background: '#f8f8f8' }}>
+                    <h3>Soil Health Analysis</h3>
+                    <div><strong>Score:</strong> {soilAnalysis.soil_score} / 100</div>
+                    <div><strong>Quality:</strong> {soilAnalysis.soil_quality}</div>
+                    {soilAnalysis.soil_recommendations && soilAnalysis.soil_recommendations.length > 0 && (
+                        <div style={{ marginTop: '0.5rem' }}>
+                            <strong>Recommendations:</strong>
+                            <ul>
+                                {soilAnalysis.soil_recommendations.map((rec, idx) => (
+                                    <li key={idx}>{rec}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };
