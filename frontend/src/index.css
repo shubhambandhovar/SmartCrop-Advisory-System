@@ -48,6 +48,82 @@ h1 {
   transition: transform 0.2s;
   width: 100%;
   max-width: 800px;
+  box-sizing: border-box;
+  margin-bottom: 2rem;
+}
+
+/* Advanced Feature Cards (Crop Calendar, Soil Health, Explainability) */
+.feature-section {
+  background: #fafbfc;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.07);
+  border-left: 6px solid #2196f3;
+  padding: 2rem 2rem 1.5rem 2rem;
+  margin: 2rem 0 0 0;
+  width: 100%;
+  max-width: 800px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.feature-section.soil {
+  border-left: 6px solid #ff9800;
+}
+.feature-section.explain {
+  border-left: 6px solid #4caf50;
+}
+.feature-section h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  color: #222;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.feature-section .feature-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  width: 100%;
+  align-items: center;
+}
+.feature-section ul {
+  margin: 0.5rem 0 0 1.2rem;
+  padding: 0 0 0 1.2rem;
+}
+.feature-section .feature-label {
+  font-weight: 600;
+  color: #333;
+  margin-right: 0.5rem;
+}
+.feature-section .feature-value {
+  color: var(--primary-green);
+  font-weight: 600;
+}
+.feature-section .pest-alert {
+  color: #388e3c;
+  font-weight: 600;
+}
+.feature-section .pest-alert.warning {
+  color: #e65100;
+}
+.feature-section .soil-score {
+  color: #4caf50;
+  font-weight: 700;
+}
+.feature-section .soil-quality {
+  font-weight: 700;
+  margin-left: 1.5rem;
+}
+.feature-section .soil-quality.good {
+  color: #4caf50;
+}
+.feature-section .soil-quality.moderate {
+  color: #ff9800;
+}
+.feature-section .soil-quality.poor {
+  color: #e65100;
 }
 
 .card:hover {

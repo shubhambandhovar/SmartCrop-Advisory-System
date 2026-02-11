@@ -43,11 +43,11 @@ const PredictionResult = ({ result }) => {
 
             {/* SHAP Explainability */}
             {shap && (
-                <div className="card" style={{ marginTop: '2rem', background: '#f8f8f8', borderLeft: '4px solid #4caf50' }}>
-                    <h3 style={{ marginBottom: 8 }}>🔎 Why these crops?</h3>
-                    <ul style={{ paddingLeft: 20, margin: 0 }}>
+                <div className="feature-section explain">
+                    <h3>🔎 Why these crops?</h3>
+                    <ul>
                         {shap.map((item, idx) => (
-                            <li key={idx} style={{ marginBottom: 4 }}>{item}</li>
+                            <li key={idx}>{item}</li>
                         ))}
                     </ul>
                 </div>
@@ -55,18 +55,18 @@ const PredictionResult = ({ result }) => {
 
             {/* Crop Calendar & Pest/Disease Alert */}
             {(cropCalendar || pestAlert) && (
-                <div className="card" style={{ marginTop: '2rem', background: '#f8f8f8', borderLeft: '4px solid #2196f3' }}>
-                    <h3 style={{ marginBottom: 8 }}>📅 Crop Calendar & Alerts</h3>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+                <div className="feature-section">
+                    <h3>📅 Crop Calendar & Alerts</h3>
+                    <div className="feature-row">
                         {cropCalendar && (
                             <div>
-                                <div><strong>🌱 Planting:</strong> {cropCalendar.planting?.join(', ') || '-'}</div>
-                                <div><strong>🌾 Harvest:</strong> {cropCalendar.harvest?.join(', ') || '-'}</div>
+                                <div><span className="feature-label">🌱 Planting:</span> <span className="feature-value">{cropCalendar.planting?.join(', ') || '-'}</span></div>
+                                <div><span className="feature-label">🌾 Harvest:</span> <span className="feature-value">{cropCalendar.harvest?.join(', ') || '-'}</span></div>
                             </div>
                         )}
                         {pestAlert && (
-                            <div style={{ color: pestAlert.includes('No major') ? '#4caf50' : '#e65100', fontWeight: 500 }}>
-                                <strong>🐛 Pest/Disease Alert:</strong> {pestAlert}
+                            <div className={`pest-alert${pestAlert.includes('No major') ? '' : ' warning'}`}>
+                                🐛 <span className="feature-label">Pest/Disease Alert:</span> {pestAlert}
                             </div>
                         )}
                     </div>
@@ -75,18 +75,18 @@ const PredictionResult = ({ result }) => {
 
             {/* Soil Health Analytics */}
             {soilAnalysis && (
-                <div className="card" style={{ marginTop: '2rem', background: '#f8f8f8', borderLeft: '4px solid #ff9800' }}>
-                    <h3 style={{ marginBottom: 8 }}>🧪 Soil Health Analysis</h3>
-                    <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                        <div style={{ fontSize: '1.1rem' }}><strong>Score:</strong> <span style={{ color: '#4caf50', fontWeight: 600 }}>{soilAnalysis.soil_score} / 100</span></div>
-                        <div style={{ fontSize: '1.1rem' }}><strong>Quality:</strong> <span style={{ color: soilAnalysis.soil_quality === 'Good' ? '#4caf50' : soilAnalysis.soil_quality === 'Moderate' ? '#ff9800' : '#e65100', fontWeight: 600 }}>{soilAnalysis.soil_quality}</span></div>
+                <div className="feature-section soil">
+                    <h3>🧪 Soil Health Analysis</h3>
+                    <div className="feature-row">
+                        <div className="soil-score">Score: {soilAnalysis.soil_score} / 100</div>
+                        <div className={`soil-quality ${soilAnalysis.soil_quality.toLowerCase()}`}>Quality: {soilAnalysis.soil_quality}</div>
                     </div>
                     {soilAnalysis.soil_recommendations && soilAnalysis.soil_recommendations.length > 0 && (
-                        <div style={{ marginTop: '0.8rem' }}>
+                        <div style={{ marginTop: '0.8rem', width: '100%' }}>
                             <strong>Recommendations:</strong>
-                            <ul style={{ paddingLeft: 20, margin: 0 }}>
+                            <ul>
                                 {soilAnalysis.soil_recommendations.map((rec, idx) => (
-                                    <li key={idx} style={{ marginBottom: 4 }}>{rec}</li>
+                                    <li key={idx}>{rec}</li>
                                 ))}
                             </ul>
                         </div>
