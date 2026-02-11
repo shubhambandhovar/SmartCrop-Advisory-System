@@ -1,3 +1,7 @@
+from flask import Blueprint, request, jsonify
+
+prediction_bp = Blueprint('prediction', __name__)
+
 # Soil health analysis logic
 def analyze_soil(soil):
     # Simple scoring: 0-100, higher is better
