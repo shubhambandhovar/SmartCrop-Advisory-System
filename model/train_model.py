@@ -84,8 +84,21 @@ def plot_eda(df: pd.DataFrame) -> None:
     plt.figure(figsize=(10, 8))
     sns.heatmap(df[numeric_cols].corr(), annot=True, cmap="coolwarm")
     plt.title("Correlation Matrix")
+    plt.xlabel("Features")
+    plt.ylabel("Features")
     plt.tight_layout()
     plt.savefig(os.path.join(PLOTS_DIR, "correlation.png"))
+    plt.close()
+
+    # Boxplot for all features
+    plt.figure(figsize=(12, 7))
+    sns.boxplot(data=df[numeric_cols])
+    plt.title("Boxplot of Features")
+    plt.xlabel("Features")
+    plt.ylabel("Value")
+    plt.xticks(rotation=30)
+    plt.tight_layout()
+    plt.savefig(os.path.join(PLOTS_DIR, "boxplot_features.png"))
     plt.close()
 
 
@@ -186,6 +199,7 @@ def train() -> None:
         plt.figure(figsize=(9, 5))
         sns.barplot(x=list(results.keys()), y=list(results.values()), color="seagreen")
         plt.ylabel("Accuracy")
+        plt.xlabel("Model")
         plt.title("Model Accuracy Comparison")
         plt.xticks(rotation=20)
         plt.ylim(0, 1)
@@ -203,6 +217,8 @@ def train() -> None:
             ordered_features = np.array(FEATURE_COLUMNS)[indices]
             plt.xticks(range(len(importances)), ordered_features, rotation=45)
             plt.title(f"Feature Importances: {name}")
+            plt.xlabel("Features")
+            plt.ylabel("Importance")
             plt.tight_layout()
             filename = f"feature_importance_{name.replace(' ', '_').lower()}.png"
             plt.savefig(os.path.join(PLOTS_DIR, filename))
@@ -225,7 +241,54 @@ def train() -> None:
         .unstack(fill_value=0)
         .to_dict("index")
     )
+
     joblib.dump(cluster_map, os.path.join(ARTIFACTS_DIR, "cluster_map.pkl"))
+
+    # Visualize cluster_map as a heatmap for interpretability
+    try:
+        import pandas as pd
+        cluster_map_df = pd.DataFrame(cluster_map).T.fillna(0)
+        plt.figure(figsize=(min(18, 2+0.5*len(cluster_map_df.columns)), 1+0.4*len(cluster_map_df)))
+        sns.heatmap(cluster_map_df, annot=True, fmt=".2f", cmap="YlGnBu")
+        plt.title("Cluster-Label Distribution Heatmap")
+        plt.xlabel("Label (Crop)")
+        plt.ylabel("Cluster")
+        plt.tight_layout()
+        plt.savefig(os.path.join(PLOTS_DIR, "cluster_map_heatmap.png"))
+        plt.close()
+    except Exception as exc:
+        print(f"Could not generate cluster_map heatmap: {exc}")
+
+    # Visualize KMeans clusters using first two principal components (if >2 features)
+    try:
+        from sklearn.decomposition import PCA
+        pca = PCA(n_components=2)
+        X_pca = pca.fit_transform(X_full_scaled)
+        plt.figure(figsize=(10, 7))
+        scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=clusters, cmap="tab20", alpha=0.7)
+        plt.title(f"KMeans Clusters (n={n_clusters})")
+        plt.xlabel("Principal Component 1")
+        plt.ylabel("Principal Component 2")
+        legend1 = plt.legend(*scatter.legend_elements(), title="Cluster")
+        plt.gca().add_artist(legend1)
+        plt.tight_layout()
+        plt.savefig(os.path.join(PLOTS_DIR, "kmeans_clusters.png"))
+        plt.close()
+    except Exception as exc:
+        print(f"Could not generate KMeans cluster plot: {exc}")
+
+    # Save a countplot of cluster assignments
+    try:
+        plt.figure(figsize=(8, 5))
+        sns.countplot(x=clusters)
+        plt.title("KMeans Cluster Counts")
+        plt.xlabel("Cluster")
+        plt.ylabel("Count")
+        plt.tight_layout()
+        plt.savefig(os.path.join(PLOTS_DIR, "kmeans_cluster_counts.png"))
+        plt.close()
+    except Exception as exc:
+        print(f"Could not generate KMeans cluster count plot: {exc}")
 
     print("Training pipeline completed successfully.")
 
