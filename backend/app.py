@@ -3,6 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 from routes.prediction_routes import prediction_bp
 from routes.search_routes import search_bp
+from routes.dev_routes import dev_bp
 import os
 from dotenv import load_dotenv
 
@@ -15,6 +16,7 @@ CORS(app) # Enable CORS for frontend
 # Register Blueprints
 app.register_blueprint(prediction_bp, url_prefix='/api')
 app.register_blueprint(search_bp, url_prefix='/api')
+app.register_blueprint(dev_bp, url_prefix='/api/dev')
 
 @app.route('/')
 def home():

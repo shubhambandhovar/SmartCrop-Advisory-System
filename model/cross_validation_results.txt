@@ -1,0 +1,8 @@
+Stratified K-Fold Cross Validation (k=5) Results
+----------------------------------------------
+Model: Random Forest Classifier
+Explanation: Stratification ensures that each fold maintains the same class distribution as the original dataset. This is critical for imbalanced agricultural data to prevent folds that might lack certain rare crop instances.
+
+Fold Accuracies: [1.0, 0.9972, 0.9886, 0.9886, 0.9943]
+Mean Accuracy: 0.9938
+Standard Deviation: 0.0045

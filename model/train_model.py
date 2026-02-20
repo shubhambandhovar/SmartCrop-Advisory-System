@@ -9,9 +9,10 @@ from sklearn.cluster import KMeans
 from sklearn.ensemble import AdaBoostClassifier, GradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
+import shap
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -191,6 +192,83 @@ def train() -> None:
         f.write(classification_report(y_test, rf_preds, zero_division=0))
 
     joblib.dump(rf_model, os.path.join(ARTIFACTS_DIR, "rf_model.pkl"))
+
+    print("Performing Stratified K-Fold Cross Validation on Random Forest...")
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    # Perform cross-validation to ensure model stability across different random splits.
+    # Stratification ensures preserving class distribution, particularly important for imbalanced agricultural datasets.
+    cv_scores = cross_val_score(rf_model, X_train_scaled, y_train, cv=skf, scoring='accuracy')
+    mean_acc = cv_scores.mean()
+    std_acc = cv_scores.std()
+
+    cv_output_path = os.path.join(ARTIFACTS_DIR, "cross_validation_results.txt")
+    with open(cv_output_path, "w", encoding="utf-8") as f:
+        f.write("Stratified K-Fold Cross Validation (k=5) Results\n")
+        f.write("----------------------------------------------\n")
+        f.write("Model: Random Forest Classifier\n")
+        f.write("Explanation: Stratification ensures that each fold maintains the same class distribution as the original dataset. This is critical for imbalanced agricultural data to prevent folds that might lack certain rare crop instances.\n\n")
+        f.write(f"Fold Accuracies: {np.round(cv_scores, 4).tolist()}\n")
+        f.write(f"Mean Accuracy: {mean_acc:.4f}\n")
+        f.write(f"Standard Deviation: {std_acc:.4f}\n")
+    print(f"Stratified CV Mean Accuracy: {mean_acc:.4f} (+/- {std_acc:.4f})")
+
+    print("Generating SHAP plots for Explainability...")
+    try:
+        explainer = shap.TreeExplainer(rf_model)
+        # Calculate SHAP values for the test set
+        shap_values = explainer.shap_values(X_test_scaled)
+        
+        # Determine the correct format of shap_values (older vs newer shap versions)
+        is_list = isinstance(shap_values, list)
+        is_3d = hasattr(shap_values, 'shape') and len(shap_values.shape) == 3
+        
+        # Summary Plot (Global)
+        plt.figure(figsize=(10, 8))
+        
+        # For a clean global explanation, we use a bar plot type or take class 0
+        if is_list:
+            sv_summary = shap_values[0]
+        elif is_3d:
+            sv_summary = shap_values[:, :, 0]
+        else:
+            sv_summary = shap_values
+            
+        shap.summary_plot(sv_summary, X_test_scaled, feature_names=FEATURE_COLUMNS, show=False)
+        plt.title("SHAP Feature Importance (Global Explainability - Class 0)")
+        plt.tight_layout()
+        plt.savefig(os.path.join(PLOTS_DIR, "shap_summary.png"))
+        plt.close()
+
+        # Local explainability for a single prediction
+        plt.figure(figsize=(10, 6))
+        single_instance = X_test_scaled[0]
+        pred_class_idx = np.argmax(rf_model.predict_proba([single_instance])[0])
+        
+        if is_list:
+            sv = shap_values[pred_class_idx][0]
+            bv = explainer.expected_value[pred_class_idx]
+        elif is_3d:
+            sv = shap_values[0, :, pred_class_idx]
+            bv = explainer.expected_value[pred_class_idx]
+        else:
+            sv = shap_values[0]
+            bv = explainer.expected_value[0] if isinstance(explainer.expected_value, (list, np.ndarray)) else explainer.expected_value
+
+        shap.plots.waterfall(shap.Explanation(
+            values=sv, 
+            base_values=bv, 
+            data=single_instance, 
+            feature_names=FEATURE_COLUMNS
+        ), show=False)
+
+        plt.title(f"SHAP Local Explanation for Predicted Class: {rf_model.classes_[pred_class_idx]}")
+        plt.tight_layout()
+        plt.savefig(os.path.join(PLOTS_DIR, "shap_local.png"))
+        plt.close()
+    except Exception as exc:
+        import traceback
+        print("SHAP exception:")
+        traceback.print_exc()
 
     if best_model is not None:
         print(f"Best model by accuracy: {best_name} ({best_acc:.4f})")

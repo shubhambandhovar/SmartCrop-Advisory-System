@@ -343,8 +343,8 @@ def predict():
                      prob_in_cluster = cluster_map[cluster_idx][label]
                      cluster_conf += weight * prob_in_cluster
             
-            # Weighted Formula: 0.6 * RF + 0.4 * Cluster
-            final_score = (0.6 * rf_conf) + (0.4 * cluster_conf)
+            # Weighted Formula: 0.7 * RF + 0.3 * Cluster (Fuzzy Membership)
+            final_score = (0.7 * rf_conf) + (0.3 * cluster_conf)
             fusion_scores[label] = final_score
             
         # Sort and get Top 3
