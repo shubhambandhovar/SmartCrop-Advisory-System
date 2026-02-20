@@ -13,6 +13,8 @@ const PredictionResult = ({ result }) => {
     const pestAlert = result.pest_disease_alert;
     // Soil health analytics
     const soilAnalysis = result.soil_analysis;
+    // Top clusters
+    const topClusters = result.top_clusters;
 
     return (
         <div className="card">
@@ -40,6 +42,58 @@ const PredictionResult = ({ result }) => {
             <div style={{ marginTop: '1rem', fontStyle: 'italic', fontSize: '0.9rem', color: '#888' }}>
                 Model: {result.model_type}
             </div>
+
+            {/* Top Clusters */}
+            {topClusters && (
+                <div className="feature-section">
+                    <h3>📊 Top 3 Matching Clusters</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
+                        {topClusters.map((cluster, idx) => (
+                            <div key={idx} style={{ padding: '0.8rem', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <strong>Cluster {cluster.cluster_index}</strong>
+                                    <span style={{ color: 'var(--primary-green)', fontWeight: 'bold' }}>
+                                        Score: {(cluster.score * 100).toFixed(1)}%
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '0.85rem', color: '#666' }}>
+                                    Dominant Crops: {cluster.dominant_crops.join(', ')}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Standard Scaler Transformation Table */}
+            {result.inputs && result.inputs_scaled && (
+                <div className="feature-section">
+                    <h3>⚖️ Standard Scaler Validation</h3>
+                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
+                        Before passing your farm data to our models, we standardize the numbers (mean=0, std=1) so features like Rainfall don't overshadow pH.
+                    </p>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '2px solid #ddd', backgroundColor: '#f1f8f5' }}>
+                                    <th style={{ padding: '8px' }}>Feature</th>
+                                    <th style={{ padding: '8px' }}>Raw Value</th>
+                                    <th style={{ padding: '8px' }}>Scaled Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall'].map((feat, idx) => (
+                                    <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td style={{ padding: '8px', fontWeight: 'bold' }}>{feat.toUpperCase()}</td>
+                                        <td style={{ padding: '8px' }}>{result.inputs[feat]?.toFixed(2) || result.inputs[feat]}</td>
+                                        <td style={{ padding: '8px', color: 'var(--primary-green)' }}>{result.inputs_scaled[feat]?.toFixed(4)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* SHAP Explainability */}
             {shap && (

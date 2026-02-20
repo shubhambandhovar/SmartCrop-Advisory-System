@@ -1,5 +1,6 @@
 import os
 import json
+import joblib
 from flask import Blueprint, jsonify
 
 dev_bp = Blueprint('dev', __name__)
@@ -104,6 +105,23 @@ def get_confusion_matrix():
     data = load_dashboard_data()
     if not data: return jsonify({"error": "Data not found"}), 500
     return jsonify(data["confusion_matrix"])
+
+@dev_bp.route('/scaler-params', methods=['GET'])
+def get_scaler_params():
+    try:
+        model_dir = os.path.join(BASE_DIR, '../../model')
+        scaler_path = os.path.join(model_dir, 'scaler.pkl')
+        scaler = joblib.load(scaler_path)
+        feature_names = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
+        return jsonify({
+            "features": feature_names,
+            "means": scaler.mean_.tolist(),
+            "variances": scaler.var_.tolist(),
+            "scales": scaler.scale_.tolist()
+        })
+    except Exception as e:
+        print(f"Error loading scaler: {e}")
+        return jsonify({"error": "Scaler not found"}), 500
 
 from flask import send_from_directory
 

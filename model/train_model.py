@@ -304,9 +304,43 @@ def train() -> None:
         except Exception as exc:
             print(f"Could not generate feature importance plot for {name}: {exc}")
 
-    print("Training K-Means...")
+    print("Evaluating K-Means with Elbow Method...")
     X_full_scaled = scaler.transform(X)
-    n_clusters = y.nunique()
+    
+    inertias = []
+    # Test k from 1 up to 30 (dataset has ~22 true classes)
+    K_range = range(1, 31)
+    
+    for k in K_range:
+        km = KMeans(n_clusters=k, random_state=42, n_init=10)
+        km.fit(X_full_scaled)
+        inertias.append(km.inertia_)
+        
+    try:
+        from kneed import KneeLocator
+        kn = KneeLocator(list(K_range), inertias, curve='convex', direction='decreasing')
+        optimal_k = kn.knee
+        print(f"Optimal K found via Elbow Method: {optimal_k}")
+    except ImportError:
+        optimal_k = None
+        
+    try:
+        plt.figure(figsize=(9, 5))
+        plt.plot(K_range, inertias, 'bx-')
+        if optimal_k:
+            plt.vlines(optimal_k, plt.ylim()[0], plt.ylim()[1], linestyles='dashed', colors='red', label=f'Optimal K = {optimal_k}')
+            plt.legend()
+        plt.xlabel('Number of clusters (k)')
+        plt.ylabel('Inertia (Sum of squared distances)')
+        plt.title('Elbow Method For Optimal k')
+        plt.tight_layout()
+        plt.savefig(os.path.join(PLOTS_DIR, "kmeans_elbow.png"))
+        plt.close()
+    except Exception as exc:
+        print(f"Could not generate elbow method plot: {exc}")
+
+    print("Training Final K-Means...")
+    n_clusters = y.nunique() # Or use optimal_k if you want to switch! We'll stick to true number of classes for crop prediction consistency.
     kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
     clusters = kmeans.fit_predict(X_full_scaled)
     joblib.dump(kmeans, os.path.join(ARTIFACTS_DIR, "kmeans.pkl"))

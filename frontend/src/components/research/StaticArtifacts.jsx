@@ -4,8 +4,7 @@ import api from '../../services/api';
 const artifactTexts = [
     { name: "Model Comparison Report", file: "model_comparison.txt" },
     { name: "Stratified K-Fold CV Results", file: "cross_validation_results.txt" },
-    { name: "Random Forest Metrics", file: "rf_metrics.txt" },
-    { name: "Boosting Comparison Report", file: "boosting_comparison_report.md" }
+    { name: "Random Forest Metrics", file: "rf_metrics.txt" }
 ];
 
 export default function StaticArtifacts() {

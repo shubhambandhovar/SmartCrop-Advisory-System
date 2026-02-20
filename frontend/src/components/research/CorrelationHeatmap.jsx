@@ -17,33 +17,37 @@ export default function CorrelationHeatmap({ data }) {
         <>
             <h3>Correlation Heatmap</h3>
             <p>Interactive grid showing linear correlation between soil/weather features.</p>
-            <div style={{ display: 'flex', overflowX: 'auto', paddingTop: '10px' }}>
-                <table style={{ borderCollapse: 'collapse', textAlign: 'center', minWidth: '600px', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', overflowX: 'auto', paddingTop: '20px', paddingBottom: '20px' }}>
+                <table style={{ borderCollapse: 'collapse', textAlign: 'center', margin: '0 auto' }}>
                     <thead>
                         <tr>
                             <th style={{ padding: '8px' }}></th>
                             {features.map((f, i) => (
-                                <th key={i} style={{ padding: '8px', fontSize: '13px', transform: 'rotate(-45deg)' }}>{f}</th>
+                                <th key={i} style={{ padding: '8px', fontSize: '13px', transform: 'rotate(-45deg)', transformOrigin: 'left bottom' }}>
+                                    <div style={{ width: '40px' }}>{f}</div>
+                                </th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {values.map((row, i) => (
                             <tr key={i}>
-                                <th style={{ padding: '8px', textAlign: 'right', fontSize: '13px' }}>{features[i]}</th>
+                                <th style={{ padding: '8px 16px', textAlign: 'right', fontSize: '13px' }}>{features[i]}</th>
                                 {row.map((cell, j) => (
                                     <td
                                         key={j}
                                         title={`${features[i]} vs ${features[j]}: ${cell.toFixed(2)}`}
                                         style={{
-                                            width: '40px',
-                                            height: '40px',
+                                            width: '50px',
+                                            height: '50px',
+                                            minWidth: '50px',
                                             padding: '8px',
                                             backgroundColor: getColor(cell),
                                             color: Math.abs(cell) > 0.5 ? '#fff' : '#000',
                                             border: '1px solid #ccc',
                                             cursor: 'crosshair',
-                                            fontSize: '0.8rem'
+                                            fontSize: '0.85rem',
+                                            fontWeight: '500'
                                         }}
                                     >
                                         {cell.toFixed(2)}

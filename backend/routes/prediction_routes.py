@@ -358,6 +358,20 @@ def predict():
                 "confidence": f"{round(score * 100, 1)}%"
             })
             
+        # Determine Top 3 Clusters based on membership_weights
+        cluster_scores = list(enumerate(membership_weights))
+        cluster_scores.sort(key=lambda x: x[1], reverse=True)
+        top_clusters = []
+        for cluster_idx, score in cluster_scores[:3]:
+            dominant_crops = []
+            if cluster_idx in cluster_map:
+                dominant_crops = sorted(cluster_map[cluster_idx].items(), key=lambda x: x[1], reverse=True)[:3]
+            top_clusters.append({
+                "cluster_index": int(cluster_idx),
+                "score": float(score),
+                "dominant_crops": [c[0] for c in dominant_crops]
+            })
+            
 
         # 5. Advisory
         top_crop = recommendations[0]['crop']
@@ -411,6 +425,16 @@ def predict():
         # Soil health analysis
         soil_analysis = analyze_soil(soil)
 
+        scaled_dict = {
+            'N': float(features_scaled[0][0]),
+            'P': float(features_scaled[0][1]),
+            'K': float(features_scaled[0][2]),
+            'temperature': float(features_scaled[0][3]),
+            'humidity': float(features_scaled[0][4]),
+            'ph': float(features_scaled[0][5]),
+            'rainfall': float(features_scaled[0][6])
+        }
+
         response = {
             "project": "Smart Crop Advisory System",
             "location": f"Lat: {lat}, Lon: {lon}",
@@ -420,6 +444,7 @@ def predict():
                 "supported": SUPPORTED_LANGUAGES
             },
             "inputs": input_dict,
+            "inputs_scaled": scaled_dict,
             "recommendations": recommendations,
             "advisory": advisory_localized,
             "model_type": "Hybrid Random Forest + KMeans Membership",
@@ -427,7 +452,8 @@ def predict():
             "crop_calendar": crop_calendar_localized,
             "current_month": translate_text(month_name, lang),
             "pest_disease_alert": pest_disease_alert_localized,
-            "soil_analysis": soil_analysis
+            "soil_analysis": soil_analysis,
+            "top_clusters": top_clusters
         }
         return jsonify(response)
 
