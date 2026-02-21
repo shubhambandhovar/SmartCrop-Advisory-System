@@ -2,8 +2,10 @@ import React, { useEffect } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { X, BookOpen, Sigma, Code } from 'lucide-react';
+import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
-export default function LogicModal({ isOpen, onClose, title, plainText, code, math }) {
+export default function LogicModal({ isOpen, onClose, title, plainText, code, math, path }) {
     // Basic esc key handler
     useEffect(() => {
         const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
@@ -27,7 +29,17 @@ export default function LogicModal({ isOpen, onClose, title, plainText, code, ma
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-gray-800 leading-tight m-0">{title}</h2>
-                            <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mt-0.5">Developer Logic View</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest">Developer Logic View</p>
+                                {path && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-300">•</span>
+                                        <span className="text-[10px] bg-blue-50 px-2 py-0.5 rounded text-blue-700 font-mono border border-blue-100 flex items-center gap-1">
+                                            <span className="opacity-50">Source:</span> {path}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <button
@@ -56,14 +68,14 @@ export default function LogicModal({ isOpen, onClose, title, plainText, code, ma
                             <h4 className="text-sm font-bold text-purple-800 uppercase tracking-widest mb-3 flex items-center gap-2">
                                 <Sigma size={16} /> Mathematical Core
                             </h4>
-                            <div className="bg-white border border-purple-100 p-4 rounded-lg font-mono text-purple-900 text-sm overflow-x-auto">
-                                {math}
+                            <div id="logic-math-container" className="bg-white border border-purple-100 p-4 rounded-lg text-purple-900 text-sm overflow-x-auto flex justify-center">
+                                <BlockMath math={math} />
                             </div>
                         </div>
                     )}
 
                     {/* Code Section */}
-                    <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex flex-col">
                         <div className="flex items-end justify-between mb-2 px-1">
                             <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest flex items-center gap-2">
                                 <Code size={16} /> Generated Logic
@@ -72,22 +84,28 @@ export default function LogicModal({ isOpen, onClose, title, plainText, code, ma
                                 Read-Only Reference
                             </p>
                         </div>
-                        <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm flex-1">
+                        <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                             <SyntaxHighlighter
                                 language="python"
                                 style={vscDarkPlus}
                                 showLineNumbers={true}
-                                customStyle={{ margin: 0, padding: '1.5rem', fontSize: '0.85rem', height: '100%', borderRadius: 0, background: '#1e1e1e' }}
+                                customStyle={{
+                                    margin: 0,
+                                    padding: '1.5rem',
+                                    fontSize: '0.85rem',
+                                    borderRadius: 0,
+                                    background: '#1e1e1e'
+                                }}
                             >
                                 {code}
                             </SyntaxHighlighter>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Click outside to close overlay */}
-            <div className="absolute inset-0 z-[-1]" onClick={onClose} />
+                {/* Click outside to close overlay */}
+                <div className="absolute inset-0 z-[-1]" onClick={onClose} />
+            </div>
         </div>
     );
 }

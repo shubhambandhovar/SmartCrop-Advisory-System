@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Code2, Info } from 'lucide-react';
 import LogicModal from './LogicModal';
 
-export default function DevWrapper({ children, devMode, title, plainText, code, math }) {
+export default function DevWrapper({ children, devMode, title, plainText, code, math, path }) {
     const [modalOpen, setModalOpen] = useState(false);
 
     return (
@@ -48,6 +48,7 @@ export default function DevWrapper({ children, devMode, title, plainText, code, 
                     plainText={plainText}
                     code={code}
                     math={math}
+                    path={path}
                 />
             )}
         </div>
