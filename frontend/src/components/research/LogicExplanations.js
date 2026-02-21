@@ -218,13 +218,30 @@ export const logicExplanations = {
     plt.savefig(os.path.join(PLOTS_DIR, "kmeans_cluster_counts.png"))`
     },
     MembershipScoreChart: {
-        title: "Fuzzy Membership & Confidence",
-        plainText: "Converts hard model probability distributions into soft clustering membership degrees indicating confidence margins.",
-        code: `# Frontend interprets Probability Matrix from the Prediction API Endpoint
-# prediction_routes.py mapping:
-probabilities = model.predict_proba(features_scaled)[0]
-top_3_idx = np.argsort(probabilities)[::-1][:3]
-confidence_scores = [probabilities[idx] * 100 for idx in top_3_idx]`
+        title: "Fuzzy Membership (Soft Clustering)",
+        plainText: "Implements a hybrid weighted ensemble combining Random Forest supervised probabilities with Unsupervised K-Means fuzzy clustering. The formula uses inverse distance to probabilistically weight the empirical label distributions discovered within physical sub-clusters.",
+        code: `def compute_fuzzy_membership_scores(distances, cluster_map, all_labels):
+    score_crop = {label: 0.0 for label in all_labels}
+    
+    # 1. Similarity Weighting (avoiding divide-by-zero)
+    with np.errstate(divide='ignore'):
+        inv_distances = 1.0 / (distances + 1e-6)
+        
+    for cluster_id, inv_dist in enumerate(inv_distances):
+        prob_map = cluster_map.get(cluster_id, {})
+        
+        # 2. Score Assignment
+        for label in all_labels:
+            proportion = float(prob_map.get(label, 0.0))
+            score_crop[label] += float(inv_dist) * proportion # ∝ (1/distance) × (proportion_category)
+            
+    # Normalize scores to 1
+    total_score = sum(score_crop.values())
+    for label in score_crop:
+        score_crop[label] = float(score_crop[label] / total_score)
+        
+    return score_crop`,
+        math: "\\text{Score}_{crop} \\propto \\sum_{k=1}^{K} \\left( \\frac{1}{d_k} \\right) \\times P(\\text{crop} \\mid C_k)"
     },
     ConfusionMatrix: {
         title: "Model Confusion Matrix",

@@ -310,56 +310,48 @@ def predict():
         features_scaled = scaler.transform(features_arr)
         
         # 4. Hybrid Prediction Logic
+        from services.cluster_membership import (
+            compute_cluster_distances,
+            compute_fuzzy_membership_scores,
+            combine_with_rf_probabilities
+        )
+        
         # A. Random Forest Probabilities
         rf_probs = rf.predict_proba(features_scaled)[0]
         rf_classes = rf.classes_
         
-        rf_score_map = {cls: prob for cls, prob in zip(rf_classes, rf_probs)}
-        
         # B. Clustering Membership
-        # Distance to centroids
-        distances = kmeans.transform(features_scaled)[0]
-        # Invert distance to get similarity/membership (closer = higher score)
-        # Add small epsilon to avoid div by zero
-        with np.errstate(divide='ignore'):
-            inv_dist = 1.0 / (distances + 1e-4)
-        membership_weights = inv_dist / np.sum(inv_dist) # Normalize to sum to 1
+        distances = compute_cluster_distances(features_scaled, kmeans)
+        membership_scores, cluster_weights = compute_fuzzy_membership_scores(distances, cluster_map, rf_classes)
         
-        # C. Fusion
-        # We need a score for each label.
-        # Cluster contribution = sum ( membership_of_cluster_i * prob_label_in_cluster_i )
+        # C. Fusion (Weighted Ensemble)
+        sorted_crops, fusion_scores = combine_with_rf_probabilities(rf_probs, rf_classes, membership_scores)
         
-        fusion_scores = {}
-        all_labels = rf_classes 
-        
-        for label in all_labels:
-            rf_conf = rf_score_map.get(label, 0.0)
-            
-            cluster_conf = 0.0
-            for cluster_idx, weight in enumerate(membership_weights):
-                # How prevalent is this label in this cluster?
-                # cluster_map is dict of dicts: cluster_map[cluster_idx][label]
-                if cluster_idx in cluster_map and label in cluster_map[cluster_idx]:
-                     prob_in_cluster = cluster_map[cluster_idx][label]
-                     cluster_conf += weight * prob_in_cluster
-            
-            # Weighted Formula: 0.7 * RF + 0.3 * Cluster (Fuzzy Membership)
-            final_score = (0.7 * rf_conf) + (0.3 * cluster_conf)
-            fusion_scores[label] = final_score
-            
-        # Sort and get Top 3
-        sorted_crops = sorted(fusion_scores.items(), key=lambda x: x[1], reverse=True)[:3]
-        
+        # Prepare required output arrays
         recommendations = []
+        recommended_crops = []
         for crop, score in sorted_crops:
+            # Existing compatibility
             recommendations.append({
                 "crop": crop,
                 "crop_localized": localize_crop_name(crop, lang),
                 "confidence": f"{round(score * 100, 1)}%"
             })
-            
-        # Determine Top 3 Clusters based on membership_weights
-        cluster_scores = list(enumerate(membership_weights))
+            # New specific format requested for API
+            recommended_crops.append({
+                "crop": crop.capitalize(),
+                "confidence": round(score * 100, 1)
+            })
+
+        cluster_debug = {
+            "distances": distances.tolist(),
+            "cluster_weights": cluster_weights,
+            "membership_scores": membership_scores
+        }
+        
+        # Determine Top 3 Clusters based on membership_weights (kept for backward compatibility)
+        # Note: membership_weights dictionary is mapping {cluster_id: weight}
+        cluster_scores = list(cluster_weights.items())
         cluster_scores.sort(key=lambda x: x[1], reverse=True)
         top_clusters = []
         for cluster_idx, score in cluster_scores[:3]:
@@ -446,6 +438,7 @@ def predict():
             "inputs": input_dict,
             "inputs_scaled": scaled_dict,
             "recommendations": recommendations,
+            "recommended_crops": recommended_crops,
             "advisory": advisory_localized,
             "model_type": "Hybrid Random Forest + KMeans Membership",
             "explainability": shap_explanation,
@@ -453,7 +446,8 @@ def predict():
             "current_month": translate_text(month_name, lang),
             "pest_disease_alert": pest_disease_alert_localized,
             "soil_analysis": soil_analysis,
-            "top_clusters": top_clusters
+            "top_clusters": top_clusters,
+            "cluster_debug": cluster_debug
         }
         return jsonify(response)
 

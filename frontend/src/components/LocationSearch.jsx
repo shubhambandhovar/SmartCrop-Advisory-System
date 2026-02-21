@@ -1,15 +1,15 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 
 const LocationSearch = ({ onLocationSelect }) => {
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
+    const isTyping = useRef(true);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
-            if (query.length > 2) {
+            if (query.length > 2 && isTyping.current) {
                 fetchSuggestions();
             } else {
                 setSuggestions([]);
@@ -31,6 +31,7 @@ const LocationSearch = ({ onLocationSelect }) => {
     };
 
     const handleSelect = (item) => {
+        isTyping.current = false;
         setQuery(item.name);
         setSuggestions([]);
         onLocationSelect(item);
@@ -42,7 +43,10 @@ const LocationSearch = ({ onLocationSelect }) => {
                 type="text"
                 placeholder="Search for a city..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                    isTyping.current = true;
+                    setQuery(e.target.value);
+                }}
             />
             {loading && <div style={{ position: 'absolute', right: '10px', top: '15px' }}>...</div>}
 

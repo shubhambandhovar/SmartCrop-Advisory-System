@@ -25,6 +25,9 @@ export default function MembershipScoreChart({ data, clusterMap }) {
         <>
             <h3>Fuzzy Membership Scores</h3>
             <p>Probabilistic cluster membership for a sample test point.</p>
+            <div style={{ background: '#eef2f5', padding: '10px', borderRadius: '5px', margin: '15px 0', fontFamily: 'monospace', fontSize: '0.95rem', color: '#2b3a42', textAlign: 'center', border: '1px solid #cdd5df' }}>
+                Membership Score &prop; (1 / distance) &times; (proportion_category)
+            </div>
             <div style={{ height: 300, width: '100%' }}>
                 <ResponsiveContainer minWidth={0}>
                     <PieChart>
