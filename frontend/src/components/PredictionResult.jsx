@@ -1,12 +1,17 @@
-
-import React from 'react';
-
+import React, { useEffect, useState } from 'react';
+import { Sprout, BarChart, Info, Droplets, Leaf } from 'lucide-react';
 
 const PredictionResult = ({ result }) => {
+    // For CSS animation trigger
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     if (!result) return null;
 
     // SHAP explainability
-    const shap = result.explainability;
+    const shap = result.explainability?.feature_impact || [];
     // Crop calendar
     const cropCalendar = result.crop_calendar;
     // Pest/disease alert
@@ -17,76 +22,103 @@ const PredictionResult = ({ result }) => {
     const topClusters = result.top_clusters;
 
     return (
-        <div className="card">
-            <h2 style={{ marginBottom: '1.2rem' }}>🌱 Recommended Crops</h2>
-            <div className="grid">
-                {result.recommendations.map((rec, idx) => (
-                    <div key={idx} className="stat-box" style={{ borderColor: idx === 0 ? 'var(--primary-green)' : '#eee', boxShadow: idx === 0 ? '0 2px 8px #d2f5e3' : 'none', background: idx === 0 ? '#f6fff9' : '#fff' }}>
-                        <div className="stat-label">Rank {idx + 1}</div>
-                        <div className="stat-value" style={{ fontWeight: 600, fontSize: '1.3rem', color: 'var(--primary-green)' }}>{rec.crop_localized || rec.crop}</div>
-                        {rec.crop_localized && rec.crop_localized !== rec.crop && (
-                            <div style={{ fontSize: '0.85rem', color: '#666' }}>{rec.crop}</div>
-                        )}
-                        <div className="confidence-bar" style={{ background: '#e0f7ef', height: 8, borderRadius: 4, margin: '8px 0' }}>
-                            <div
-                                className="confidence-fill"
-                                style={{ width: rec.confidence, background: 'linear-gradient(90deg, #4caf50, #a5d6a7)', height: 8, borderRadius: 4 }}
-                            ></div>
-                        </div>
-                        <div style={{ fontSize: '0.8rem', marginTop: '5px', color: '#666' }}>
-                            Confidence: {rec.confidence}
-                        </div>
+        <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 mt-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+                        <Sprout size={24} />
                     </div>
-                ))}
-            </div>
-            <div style={{ marginTop: '1rem', fontStyle: 'italic', fontSize: '0.9rem', color: '#888' }}>
-                Model: {result.model_type}
+                    <h2 className="text-2xl font-bold border-b-2 border-green-500 pb-1 w-max text-gray-800">Recommended Crops</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {result.recommendations?.map((rec, idx) => {
+                        const scoreNum = parseFloat(rec.confidence);
+                        return (
+                            <div key={idx} className={`relative flex flex-col rounded-xl border p-5 transition-all duration-300 ${idx === 0
+                                    ? 'border-green-400 bg-green-50/50 shadow-md ring-1 ring-green-100 scale-[1.02]'
+                                    : 'border-gray-100 bg-white hover:border-green-200 hover:shadow-sm'
+                                }`}>
+                                {idx === 0 && (
+                                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-green-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                                        Top Match
+                                    </span>
+                                )}
+                                <div className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-1">Rank {idx + 1}</div>
+                                <div className="text-2xl font-bold text-gray-800 mb-1">{rec.crop_localized || rec.crop}</div>
+
+                                {rec.crop_localized && rec.crop_localized !== rec.crop && (
+                                    <div className="text-xs text-gray-500 italic mb-3">{rec.crop}</div>
+                                )}
+
+                                <div className="mt-auto">
+                                    <div className="flex justify-between text-sm font-medium mb-1.5">
+                                        <span className="text-gray-600">Confidence</span>
+                                        <span className={idx === 0 ? "text-green-600 font-bold" : "text-gray-700"}>{rec.confidence}</span>
+                                    </div>
+                                    <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-1000 ease-out ${idx === 0 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-green-400'}`}
+                                            style={{ width: mounted ? rec.confidence : '0%' }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="mt-6 text-sm italic text-gray-400 text-right flex items-center justify-end gap-1.5">
+                    <Info size={14} /> Model: {result.model_type}
+                </div>
             </div>
 
             {/* Top Clusters */}
             {topClusters && (
-                <div className="feature-section">
-                    <h3>📊 Top 3 Matching Clusters</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '1rem' }}>
+                <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-blue-500 border-t border-r border-b border-gray-100 p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                        <BarChart className="text-blue-500" size={20} />
+                        <h3 className="text-lg font-bold text-gray-800">Top 3 Matching Clusters</h3>
+                    </div>
+                    <div className="space-y-3">
                         {topClusters.map((cluster, idx) => (
-                            <div key={idx} style={{ padding: '0.8rem', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                    <strong>Cluster {cluster.cluster_index}</strong>
-                                    <span style={{ color: 'var(--primary-green)', fontWeight: 'bold' }}>
-                                        Score: {(cluster.score * 100).toFixed(1)}%
-                                    </span>
+                            <div key={idx} className="bg-gray-50 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border border-gray-100">
+                                <div>
+                                    <strong className="text-gray-700 mr-2">Cluster {cluster.cluster_index}</strong>
+                                    <span className="text-sm text-gray-500">Dominant: <span className="text-gray-700 font-medium">{cluster.dominant_crops.join(', ')}</span></span>
                                 </div>
-                                <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                                    Dominant Crops: {cluster.dominant_crops.join(', ')}
-                                </div>
+                                <span className="bg-blue-50 text-blue-700 font-bold px-3 py-1 rounded-full text-sm shrink-0 shadow-sm border border-blue-100">
+                                    Score: {(cluster.score * 100).toFixed(1)}%
+                                </span>
                             </div>
                         ))}
                     </div>
                 </div>
             )}
 
+            {/* General Feature Sections (Using original layout style for now, but tailedized) */}
+
             {/* Standard Scaler Transformation Table */}
             {result.inputs && result.inputs_scaled && (
-                <div className="feature-section">
-                    <h3>⚖️ Standard Scaler Validation</h3>
-                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '1rem' }}>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">⚖️ Standard Scaler Validation</h3>
+                    <p className="text-gray-500 text-sm mb-4">
                         Before passing your farm data to our models, we standardize the numbers (mean=0, std=1) so features like Rainfall don't overshadow pH.
                     </p>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
-                            <thead>
-                                <tr style={{ borderBottom: '2px solid #ddd', backgroundColor: '#f1f8f5' }}>
-                                    <th style={{ padding: '8px' }}>Feature</th>
-                                    <th style={{ padding: '8px' }}>Raw Value</th>
-                                    <th style={{ padding: '8px' }}>Scaled Value</th>
+                    <div className="overflow-x-auto rounded-xl border border-gray-200">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-gray-50 border-b border-gray-200 text-gray-600">
+                                <tr>
+                                    <th className="px-4 py-3 font-semibold">Feature</th>
+                                    <th className="px-4 py-3 font-semibold">Raw Value</th>
+                                    <th className="px-4 py-3 font-semibold">Scaled Value</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="divide-y divide-gray-100 pt-1">
                                 {['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall'].map((feat, idx) => (
-                                    <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
-                                        <td style={{ padding: '8px', fontWeight: 'bold' }}>{feat.toUpperCase()}</td>
-                                        <td style={{ padding: '8px' }}>{result.inputs[feat]?.toFixed(2) || result.inputs[feat]}</td>
-                                        <td style={{ padding: '8px', color: 'var(--primary-green)' }}>{result.inputs_scaled[feat]?.toFixed(4)}</td>
+                                    <tr key={idx} className="hover:bg-gray-50/50">
+                                        <td className="px-4 py-2.5 font-medium text-gray-800 uppercase">{feat}</td>
+                                        <td className="px-4 py-2.5 text-gray-600">{result.inputs[feat]?.toFixed(2) || result.inputs[feat]}</td>
+                                        <td className="px-4 py-2.5 text-green-600 font-medium bg-green-50/30">{result.inputs_scaled[feat]?.toFixed(4)}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -95,13 +127,13 @@ const PredictionResult = ({ result }) => {
                 </div>
             )}
 
-            {/* SHAP Explainability */}
-            {shap && (
-                <div className="feature-section explain">
-                    <h3>🔎 Why these crops?</h3>
-                    <ul>
-                        {shap.map((item, idx) => (
-                            <li key={idx}>{item}</li>
+            {/* SHAP Explainability Note: format changed in previous step */}
+            {shap && shap.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-green-500 border border-gray-100 p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">🔎 Why these crops?</h3>
+                    <ul className="list-disc list-inside space-y-1 text-gray-600 text-sm">
+                        {shap.slice(0, 3).map((item, idx) => (
+                            <li key={idx}><span className="font-semibold">{item[0]}:</span> impact score {(item[1]).toFixed(3)}</li>
                         ))}
                     </ul>
                 </div>
@@ -109,18 +141,30 @@ const PredictionResult = ({ result }) => {
 
             {/* Crop Calendar & Pest/Disease Alert */}
             {(cropCalendar || pestAlert) && (
-                <div className="feature-section">
-                    <h3>📅 Crop Calendar & Alerts</h3>
-                    <div className="feature-row">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">📅 Crop Calendar & Alerts</h3>
+                    <div className="flex flex-wrap gap-8">
                         {cropCalendar && (
-                            <div>
-                                <div><span className="feature-label">🌱 Planting:</span> <span className="feature-value">{cropCalendar.planting?.join(', ') || '-'}</span></div>
-                                <div><span className="feature-label">🌾 Harvest:</span> <span className="feature-value">{cropCalendar.harvest?.join(', ') || '-'}</span></div>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                    <Leaf className="text-green-500" size={16} />
+                                    <span className="font-medium text-gray-700">Planting:</span>
+                                    <span className="text-gray-600">{cropCalendar.planting?.join(', ') || '-'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm">
+                                    <div className="text-yellow-500">🌾</div>
+                                    <span className="font-medium text-gray-700">Harvest:</span>
+                                    <span className="text-gray-600">{cropCalendar.harvest?.join(', ') || '-'}</span>
+                                </div>
                             </div>
                         )}
                         {pestAlert && (
-                            <div className={`pest-alert${pestAlert.includes('No major') ? '' : ' warning'}`}>
-                                🐛 <span className="feature-label">Pest/Disease Alert:</span> {pestAlert}
+                            <div className={`text-sm px-4 py-3 rounded-xl border flex items-start gap-2 max-w-sm ${pestAlert.includes('No major') ? 'bg-green-50 border-green-100 text-green-800' : 'bg-orange-50 border-orange-200 text-orange-800'}`}>
+                                <div className="mt-0.5">🐛</div>
+                                <div>
+                                    <div className="font-bold mb-0.5">Pest/Disease Alert:</div>
+                                    <div>{pestAlert}</div>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -129,16 +173,22 @@ const PredictionResult = ({ result }) => {
 
             {/* Soil Health Analytics */}
             {soilAnalysis && (
-                <div className="feature-section soil">
-                    <h3>🧪 Soil Health Analysis</h3>
-                    <div className="feature-row">
-                        <div className="soil-score">Score: {soilAnalysis.soil_score} / 100</div>
-                        <div className={`soil-quality ${soilAnalysis.soil_quality.toLowerCase()}`}>Quality: {soilAnalysis.soil_quality}</div>
+                <div className="bg-white rounded-2xl shadow-sm border-l-4 border-l-orange-400 border border-gray-100 p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">🧪 Soil Health Analysis</h3>
+                    <div className="flex flex-wrap items-center gap-6 mb-4">
+                        <div className="bg-orange-50 text-orange-700 px-4 py-2 rounded-lg font-bold border border-orange-100 shadow-sm">
+                            Score: {soilAnalysis.soil_score} / 100
+                        </div>
+                        <div className={`font-bold text-lg ${soilAnalysis.soil_quality?.toLowerCase() === 'good' ? 'text-green-600' :
+                                soilAnalysis.soil_quality?.toLowerCase() === 'moderate' ? 'text-orange-500' : 'text-red-500'
+                            }`}>
+                            Quality: {soilAnalysis.soil_quality}
+                        </div>
                     </div>
                     {soilAnalysis.soil_recommendations && soilAnalysis.soil_recommendations.length > 0 && (
-                        <div style={{ marginTop: '0.8rem', width: '100%' }}>
-                            <strong>Recommendations:</strong>
-                            <ul>
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <strong className="block text-gray-800 mb-2">Recommendations:</strong>
+                            <ul className="list-inside list-disc text-sm text-gray-600 space-y-1">
                                 {soilAnalysis.soil_recommendations.map((rec, idx) => (
                                     <li key={idx}>{rec}</li>
                                 ))}

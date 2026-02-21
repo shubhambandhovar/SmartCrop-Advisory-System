@@ -1,70 +1,93 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { X, BookOpen, Sigma, Code } from 'lucide-react';
 
 export default function LogicModal({ isOpen, onClose, title, plainText, code, math }) {
+    // Basic esc key handler
+    useEffect(() => {
+        const handleEsc = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, [onClose]);
+
     if (!isOpen) return null;
 
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0, left: 0, width: '100%', height: '100%',
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999
-        }}>
-            <div style={{
-                background: '#fff',
-                width: '80%',
-                maxWidth: '900px',
-                maxHeight: '85vh',
-                borderRadius: '8px',
-                padding: '2rem',
-                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                display: 'flex',
-                flexDirection: 'column',
-                position: 'relative',
-                overflowY: 'auto'
-            }}>
-                <button
-                    onClick={onClose}
-                    style={{
-                        position: 'absolute', top: '15px', right: '15px',
-                        background: 'transparent', border: 'none',
-                        fontSize: '1.5rem', cursor: 'pointer', color: '#666'
-                    }}
-                >
-                    &times;
-                </button>
-
-                <h2 style={{ marginTop: 0, borderBottom: '2px solid var(--primary-green)', paddingBottom: '0.5rem', color: '#333' }}>
-                    {title} <span style={{ fontSize: '0.8rem', color: '#888', fontWeight: 'normal' }}>(Developer View)</span>
-                </h2>
-
-                <div style={{ marginBottom: '1.5rem', lineHeight: '1.6', color: '#444' }}>
-                    <h4 style={{ margin: '1rem 0 0.5rem 0', color: '#2c3e50' }}>Plain English Explanation</h4>
-                    <p style={{ margin: 0 }}>{plainText}</p>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div
+                className="bg-white w-11/12 max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col relative overflow-hidden animate-in slide-in-from-bottom-8 duration-300"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                            <BookOpen size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-gray-800 leading-tight m-0">{title}</h2>
+                            <p className="text-xs font-semibold text-blue-500 uppercase tracking-widest mt-0.5">Developer Logic View</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors"
+                    >
+                        <X size={24} />
+                    </button>
                 </div>
 
-                {math && (
-                    <div style={{ marginBottom: '1.5rem', background: '#f5f7fa', padding: '1rem', borderRadius: '4px', borderLeft: '4px solid #3498db' }}>
-                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#2980b9' }}>Mathematical Intuition</h4>
-                        <div style={{ fontFamily: 'monospace', fontSize: '1rem', whiteSpace: 'pre-wrap' }}>{math}</div>
+                {/* Content */}
+                <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
+                    {/* Explanation Section */}
+                    <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5">
+                        <h4 className="text-sm font-bold text-blue-800 uppercase tracking-widest mb-2 flex items-center gap-2">
+                            Plain English Intuition
+                        </h4>
+                        <p className="text-gray-700 leading-relaxed text-sm">
+                            {plainText}
+                        </p>
                     </div>
-                )}
 
-                <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>Exact Generating Logic</h4>
-                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#e74c3c' }}>
-                        * Read-only snippet. Highlights the exact python/js segment used mapped to this module.
-                    </p>
-                    <SyntaxHighlighter language="python" style={vscDarkPlus} showLineNumbers customStyle={{ borderRadius: '6px', fontSize: '0.9rem', margin: 0 }}>
-                        {code}
-                    </SyntaxHighlighter>
+                    {/* Math Section */}
+                    {math && (
+                        <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-5">
+                            <h4 className="text-sm font-bold text-purple-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Sigma size={16} /> Mathematical Core
+                            </h4>
+                            <div className="bg-white border border-purple-100 p-4 rounded-lg font-mono text-purple-900 text-sm overflow-x-auto">
+                                {math}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Code Section */}
+                    <div className="flex-1 flex flex-col min-h-0">
+                        <div className="flex items-end justify-between mb-2 px-1">
+                            <h4 className="text-sm font-bold text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                                <Code size={16} /> Generated Logic
+                            </h4>
+                            <p className="text-xs text-orange-500 font-medium bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
+                                Read-Only Reference
+                            </p>
+                        </div>
+                        <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm flex-1">
+                            <SyntaxHighlighter
+                                language="python"
+                                style={vscDarkPlus}
+                                showLineNumbers={true}
+                                customStyle={{ margin: 0, padding: '1.5rem', fontSize: '0.85rem', height: '100%', borderRadius: 0, background: '#1e1e1e' }}
+                            >
+                                {code}
+                            </SyntaxHighlighter>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            {/* Click outside to close overlay */}
+            <div className="absolute inset-0 z-[-1]" onClick={onClose} />
         </div>
     );
 }

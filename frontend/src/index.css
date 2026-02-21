@@ -1,8 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --primary-green: #2ecc71;
   --dark-green: #27ae60;
-  --light-bg: #f0f9f4;
+  --light-bg: #f0fdf4;
+  /* Updated to tailwind soft-bg */
   --card-bg: #ffffff;
   --text-dark: #2c3e50;
   --text-light: #ecf0f1;
@@ -37,14 +41,14 @@ h1 {
   font-size: 3.2em;
   line-height: 1.1;
   color: var(--dark-green);
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .card {
   background: var(--card-bg);
   padding: 2rem;
   border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
   width: 100%;
   max-width: 800px;
@@ -56,7 +60,7 @@ h1 {
 .feature-section {
   background: #fafbfc;
   border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.07);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.07);
   border-left: 6px solid #2196f3;
   padding: 2rem 2rem 1.5rem 2rem;
   margin: 2rem 0 0 0;
@@ -67,12 +71,15 @@ h1 {
   flex-direction: column;
   align-items: flex-start;
 }
+
 .feature-section.soil {
   border-left: 6px solid #ff9800;
 }
+
 .feature-section.explain {
   border-left: 6px solid #4caf50;
 }
+
 .feature-section h3 {
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
@@ -81,6 +88,7 @@ h1 {
   align-items: center;
   gap: 0.5rem;
 }
+
 .feature-section .feature-row {
   display: flex;
   flex-wrap: wrap;
@@ -88,47 +96,57 @@ h1 {
   width: 100%;
   align-items: center;
 }
+
 .feature-section ul {
   margin: 0.5rem 0 0 1.2rem;
   padding: 0 0 0 1.2rem;
 }
+
 .feature-section .feature-label {
   font-weight: 600;
   color: #333;
   margin-right: 0.5rem;
 }
+
 .feature-section .feature-value {
   color: var(--primary-green);
   font-weight: 600;
 }
+
 .feature-section .pest-alert {
   color: #388e3c;
   font-weight: 600;
 }
+
 .feature-section .pest-alert.warning {
   color: #e65100;
 }
+
 .feature-section .soil-score {
   color: #4caf50;
   font-weight: 700;
 }
+
 .feature-section .soil-quality {
   font-weight: 700;
   margin-left: 1.5rem;
 }
+
 .feature-section .soil-quality.good {
   color: #4caf50;
 }
+
 .feature-section .soil-quality.moderate {
   color: #ff9800;
 }
+
 .feature-section .soil-quality.poor {
   color: #e65100;
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.05);
 }
 
 .input-group {
@@ -220,7 +238,7 @@ button:disabled {
   border-radius: 8px;
   margin-top: 5px;
   z-index: 10;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   max-height: 200px;
   overflow-y: auto;
   text-align: left;
@@ -261,8 +279,13 @@ button:disabled {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .advisory-panel {

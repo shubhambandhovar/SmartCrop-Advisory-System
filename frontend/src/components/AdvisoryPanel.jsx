@@ -44,24 +44,26 @@ const AdvisoryPanel = ({ advisory, lang = 'en' }) => {
     const labels = PANEL_LABELS[lang] || PANEL_LABELS.en;
 
     return (
-        <div className="card advisory-panel">
-            <h2>{labels.title}</h2>
-            <div className="grid">
-                <div className="advisory-item">
-                    <h4>🧪 {labels.fertilizer}</h4>
-                    <p>{advisory.fertilizer_tip}</p>
+        <div className="bg-green-50 rounded-2xl border-l-8 border-l-primary-green p-6 shadow-sm border border-gray-100">
+            <h2 className="text-xl font-bold text-green-800 mb-6 flex items-center gap-2">
+                <span className="text-2xl">🚜</span> {labels.title}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full text-left">
+                <div className="bg-white/80 rounded-xl p-4 border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                    <h4 className="font-bold text-green-700 mb-2 flex items-center gap-2">🧪 {labels.fertilizer}</h4>
+                    <p className="text-gray-700 text-sm leading-relaxed">{advisory.fertilizer_tip}</p>
                 </div>
-                <div className="advisory-item">
-                    <h4>💧 {labels.irrigation}</h4>
-                    <p>{advisory.irrigation_tip}</p>
+                <div className="bg-white/80 rounded-xl p-4 border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                    <h4 className="font-bold text-blue-700 mb-2 flex items-center gap-2">💧 {labels.irrigation}</h4>
+                    <p className="text-gray-700 text-sm leading-relaxed">{advisory.irrigation_tip}</p>
                 </div>
-                <div className="advisory-item">
-                    <h4>📅 {labels.bestSeason}</h4>
-                    <p>{advisory.best_season}</p>
+                <div className="bg-white/80 rounded-xl p-4 border border-yellow-100 shadow-sm hover:shadow-md transition-shadow">
+                    <h4 className="font-bold text-yellow-700 mb-2 flex items-center gap-2">📅 {labels.bestSeason}</h4>
+                    <p className="text-gray-700 text-sm leading-relaxed">{advisory.best_season}</p>
                 </div>
-                <div className="advisory-item">
-                    <h4>🌱 {labels.soilNote}</h4>
-                    <p>{advisory.soil_note}</p>
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
+                    <h4 className="font-bold text-orange-700 mb-2 flex items-center gap-2">🌱 {labels.soilNote}</h4>
+                    <p className="text-gray-700 text-sm leading-relaxed">{advisory.soil_note}</p>
                 </div>
             </div>
         </div>
